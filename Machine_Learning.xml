@@ -465,8 +465,28 @@ recon_system = recommendation_system();
 system f, ml_model, rm_noise, data_cleansing, k, fetch_content_obj, recon_system;</system>
 	<queries>
 		<query>
-			<formula>A[] deadlock imply f.exit</formula>
+			<formula></formula>
 			<comment></comment>
+		</query>
+		<query>
+			<formula>E&lt;&gt; f.watch</formula>
+			<comment>User will always reach watch state : E&lt;&gt; f.watch</comment>
+		</query>
+		<query>
+			<formula>A&lt;&gt; (f.recommend_content imply ml_model.Exit)</formula>
+			<comment>If i reach recommendation then ml should exit : A&lt;&gt; (f.recommend_content imply ml_model.Exit)</comment>
+		</query>
+		<query>
+			<formula>A&lt;&gt; (f.click_content imply f.check_subscription)</formula>
+			<comment>If content clicked then check for subscription : A&lt;&gt; (f.click_content imply f.check_subscription)</comment>
+		</query>
+		<query>
+			<formula>A&lt;&gt; (f.login imply f.recommend_content)</formula>
+			<comment>if login then recommendations : A&lt;&gt; (f.login imply f.recommend_content)</comment>
+		</query>
+		<query>
+			<formula>A[] deadlock imply f.exit</formula>
+			<comment>No deadlock : A[] deadlock imply f.exit</comment>
 		</query>
 	</queries>
 </nta>
