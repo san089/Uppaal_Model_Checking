@@ -239,21 +239,20 @@ int counter = 0;</declaration>
 		<transition>
 			<source ref="id18"/>
 			<target ref="id18"/>
-			<label kind="guard" x="-144" y="-153">counter &lt; cluster_size</label>
+			<label kind="guard" x="-153" y="-153">counter &lt; cluster_size</label>
 			<label kind="assignment" x="-144" y="-170">counter = counter + 1</label>
 			<nail x="-14" y="-131"/>
-			<nail x="-142" y="-131"/>
+			<nail x="-153" y="-127"/>
 		</transition>
 	</template>
 	<template>
 		<name>front_end</name>
-		<parameter>bool logged_in</parameter>
+		<parameter>bool logged_in, bool manual_search</parameter>
 		<declaration>bool existing_user = false;
 bool create_profile = false;
-bool manual_search = false;
 bool content_access = false;</declaration>
 		<location id="id21" x="739" y="-51">
-			<name x="729" y="-81">exit</name>
+			<name x="729" y="-81">logout</name>
 		</location>
 		<location id="id22" x="629" y="-51">
 			<name x="619" y="-81">watch</name>
@@ -268,10 +267,10 @@ bool content_access = false;</declaration>
 			<name x="365" y="-102">check_subscription</name>
 		</location>
 		<location id="id26" x="168" y="16">
-			<name x="136" y="24">Search_content</name>
+			<name x="136" y="24">search_content</name>
 		</location>
 		<location id="id27" x="-170" y="-85">
-			<name x="-238" y="-68">recommend_content</name>
+			<name x="-263" y="-59">recommend_content_generated</name>
 		</location>
 		<location id="id28" x="-484" y="110">
 			<name x="-540" y="134">profile_creation_process</name>
@@ -465,13 +464,77 @@ ml_model = automation_model(80);
 rm_noise = remove_noise();
 k = k_means_algo(4);
 data_clean = data_cleansing();
-f = front_end(false);
+f = front_end(false, false);
 fetch_content_obj = fetch_content_process();
 recon_system = recommendation_system();
 
 // List one or more processes to be composed into a system.
-system f, ml_model, rm_noise, data_cleansing, k, fetch_content_obj, recon_system;</system>
+system f, ml_model, recon_system, rm_noise, data_cleansing, k, fetch_content_obj ;</system>
 	<queries>
+		<query>
+			<formula>A[] ( f.logout imply !(f.logged_in == false | f.existing_user == false ) )</formula>
+			<comment>I dont want a stage where the user is going to logout but the logged_in status is false and existing_user status is also false.</comment>
+		</query>
+		<query>
+			<formula>E&lt;&gt; f.logout</formula>
+			<comment></comment>
+		</query>
+		<query>
+			<formula>E&lt;&gt; f.login</formula>
+			<comment>User should always be able to login.</comment>
+		</query>
+		<query>
+			<formula>A[] ( ((k.counter &lt; k.cluster_size)  and clustering_completed == false) or (clustering_completed imply (k.counter &gt;= k.cluster_size) )  )</formula>
+			<comment>If the counter is less than the cluster size I should not have clustering_completed as true. Also, if cluster_completed is true then counter should be greater than cluster size.</comment>
+		</query>
+		<query>
+			<formula>A[] not( ml_model.accuracy &gt;= 90 &amp;  recon_generated )</formula>
+			<comment>I don't want a stage where I got accuracy &gt;= 90 and also running the recommendation system.</comment>
+		</query>
+		<query>
+			<formula>A[] ( rm_noise.Noise_removed imply (rm_noise.remove_na_null &amp; rm_noise.outliers_removal )  )</formula>
+			<comment>Noise Removal model should only exit after it has removed null values and also removed the outliers.</comment>
+		</query>
+		<query>
+			<formula>A[] ( ml_model.Exit imply automation_model_completed )</formula>
+			<comment>Machine learning model should only exit after the automation model has completed its execution.</comment>
+		</query>
+		<query>
+			<formula>A[] ( ml_model.Make_predictions imply ( preprocessing_done &amp; clustering_completed ) ) </formula>
+			<comment>Model should make prediction only when preprocessing is completed and k means clustering is completed.</comment>
+		</query>
+		<query>
+			<formula>A[] ( f.click_content imply ( f.existing_user &amp; f.logged_in &amp; (recon_complete | f.manual_search) ) )</formula>
+			<comment>Only be able to click content if he is a existing user and logged in and either got the recommemdations or manually searched.</comment>
+		</query>
+		<query>
+			<formula>E&lt;&gt; ( recon_system.end_result )</formula>
+			<comment></comment>
+		</query>
+		<query>
+			<formula>E&lt;&gt; ( ml_model.Deploy )</formula>
+			<comment>There always exist a stage in future where we will be deploying model.</comment>
+		</query>
+		<query>
+			<formula>E&lt;&gt; ( ml_model.Model_Selection ) </formula>
+			<comment>There always exist a state where we will be having model selection.</comment>
+		</query>
+		<query>
+			<formula>E&lt;&gt; ( f.click_content | f.search_content )</formula>
+			<comment>There always exist a path where the user can click the recommended content or can search for content.</comment>
+		</query>
+		<query>
+			<formula>A[] ( f.profile_creation_process imply (!f.existing_user)  )</formula>
+			<comment>Create profile only if user is not and existing user else Just Login.</comment>
+		</query>
+		<query>
+			<formula>E&lt;&gt; f.click_content</formula>
+			<comment>Always exist a path where we will reach click_content</comment>
+		</query>
+		<query>
+			<formula>A[] (f.watch imply ( f.existing_user and f.content_access) )</formula>
+			<comment>If watch then it must be an existing user and must have the subscription</comment>
+		</query>
 		<query>
 			<formula>A[] ( ml_model.Model_Selection imply ( preprocessing_done == true ) )</formula>
 			<comment>Only use model after Preprocessing is done.</comment>
