@@ -13,9 +13,8 @@ bool recon_generated = false;</declaration>
 	<template>
 		<name x="5" y="5">automation_model</name>
 		<parameter>int accuracy</parameter>
-		<declaration>chan select_other_model, data_split;
-bool train_test_data_split = false;
-bool textual_model = true;
+		<declaration>bool train_test_data_split = false;
+
 
 </declaration>
 		<location id="id0" x="792" y="-288">
@@ -205,8 +204,7 @@ bool outliers_removal = false;</declaration>
 	<template>
 		<name>k_means_algo</name>
 		<parameter>int cluster_size</parameter>
-		<declaration>chan update_cluster;
-int counter = 0;</declaration>
+		<declaration>int counter = 0;</declaration>
 		<location id="id17" x="314" y="-51">
 			<name x="304" y="-85">exit</name>
 		</location>
@@ -247,8 +245,8 @@ int counter = 0;</declaration>
 	</template>
 	<template>
 		<name>front_end</name>
-		<parameter>bool logged_in, bool manual_search</parameter>
-		<declaration>bool existing_user = false;
+		<parameter>bool existing_user, bool manual_search</parameter>
+		<declaration>bool logged_in = false;
 bool create_profile = false;
 bool content_access = false;</declaration>
 		<location id="id21" x="739" y="-51">
